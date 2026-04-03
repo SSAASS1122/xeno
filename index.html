@@ -1,483 +1,760 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Download & Watch</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Xeno Executor — Next-Gen Script Executor</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-    :root {
-      --blue-0: #e8f4ff;
-      --blue-1: #b3d9ff;
-      --blue-2: #5eb3ff;
-      --blue-3: #1a8cff;
-      --blue-4: #0062d1;
-      --blue-5: #003f8a;
-      --blue-dark: #020c1b;
-      --blue-deep: #050e21;
-      --glow: 0 0 40px rgba(30,140,255,0.45), 0 0 80px rgba(30,140,255,0.18);
-      --glow-sm: 0 0 16px rgba(30,140,255,0.5);
-    }
+:root{
+  --red:#ff1a1a;
+  --red-dim:#cc0000;
+  --red-glow:rgba(255,26,26,0.6);
+  --red-faint:rgba(255,26,26,0.08);
+  --dark:#040608;
+  --dark2:#080d12;
+  --dark3:#0d1117;
+  --panel:rgba(10,15,22,0.85);
+  --border:rgba(255,26,26,0.18);
+  --border-bright:rgba(255,26,26,0.55);
+  --text:#c8d8e8;
+  --text-dim:#6a7f90;
+  --mono:'Share Tech Mono',monospace;
+}
 
-    html { scroll-behavior: smooth; }
+html{scroll-behavior:smooth;}
 
-    body {
-      background: var(--blue-dark);
-      color: #ddeeff;
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+body{
+  background:var(--dark);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  overflow-x:hidden;
+  cursor:none;
+}
 
-    /* ─── BACKGROUND ─── */
-    .bg-layer {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 70% 50% at 20% 30%, rgba(0,98,209,0.22) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 40% at 80% 70%, rgba(94,179,255,0.13) 0%, transparent 60%),
-        radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0,62,138,0.35) 0%, transparent 70%);
-    }
-    .bg-grid {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(94,179,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(94,179,255,0.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-    }
+/* ── CUSTOM CURSOR ── */
+.cursor{
+  position:fixed;width:12px;height:12px;
+  background:var(--red);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:transform .1s;
+  box-shadow:0 0 10px var(--red),0 0 20px var(--red-glow);
+}
+.cursor-ring{
+  position:fixed;width:36px;height:36px;
+  border:1px solid rgba(255,26,26,0.5);border-radius:50%;
+  pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:all .12s ease;
+}
 
-    /* ─── NAV ─── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 48px;
-      backdrop-filter: blur(20px);
-      background: rgba(2,12,27,0.7);
-      border-bottom: 1px solid rgba(94,179,255,0.1);
-    }
-    .nav-logo {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px;
-      letter-spacing: 3px;
-      color: var(--blue-2);
-      text-shadow: var(--glow-sm);
-    }
-    .nav-links { display: flex; gap: 36px; }
-    .nav-links a {
-      color: rgba(179,217,255,0.7);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      transition: color .2s;
-    }
-    .nav-links a:hover { color: var(--blue-2); }
+/* ── SCANLINES ── */
+body::after{
+  content:'';
+  position:fixed;inset:0;z-index:9990;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.04) 2px,
+    rgba(0,0,0,0.04) 4px
+  );
+}
 
-    /* ─── HERO ─── */
-    .hero {
-      position: relative; z-index: 1;
-      min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center;
-      padding: 120px 24px 60px;
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(30,140,255,0.12);
-      border: 1px solid rgba(94,179,255,0.3);
-      border-radius: 100px;
-      padding: 6px 18px;
-      font-size: 12px; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--blue-2);
-      margin-bottom: 32px;
-      animation: fadeUp .8s ease both;
-    }
-    .hero-badge span { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-2); animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+/* ── NOISE OVERLAY ── */
+.noise{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
-    h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(64px, 10vw, 130px);
-      line-height: .95;
-      letter-spacing: 4px;
-      background: linear-gradient(135deg, #ffffff 0%, var(--blue-1) 50%, var(--blue-3) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 24px;
-      animation: fadeUp .8s .15s ease both;
-    }
-    .hero-sub {
-      font-size: 18px; font-weight: 300; color: rgba(179,217,255,0.65);
-      max-width: 520px; line-height: 1.7;
-      margin-bottom: 52px;
-      animation: fadeUp .8s .3s ease both;
-    }
+/* ── BACKGROUND ── */
+.bg{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 50% 60% at 15% 20%,rgba(255,26,26,0.07) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 50% at 85% 80%,rgba(255,26,26,0.05) 0%,transparent 70%),
+    radial-gradient(ellipse 80% 40% at 50% 110%,rgba(20,0,0,0.8) 0%,transparent 60%),
+    linear-gradient(180deg,#040608 0%,#060a0f 100%);
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,26,26,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,26,26,0.04) 1px,transparent 1px);
+  background-size:50px 50px;
+  mask-image:radial-gradient(ellipse 100% 100% at 50% 0%,black 30%,transparent 100%);
+}
+/* Animated grid lines */
+.bg-grid::after{
+  content:'';
+  position:fixed;inset:0;
+  background:linear-gradient(180deg,transparent 0%,rgba(255,26,26,0.06) 50%,transparent 100%);
+  background-size:100% 200px;
+  animation:scanDown 6s linear infinite;
+}
+@keyframes scanDown{from{background-position:0 -200px}to{background-position:0 100vh}}
 
-    /* ─── BUTTONS ─── */
-    .btn-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; animation: fadeUp .8s .45s ease both; }
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;height:64px;
+  background:rgba(4,6,8,0.92);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+.nav-logo{
+  display:flex;align-items:center;gap:12px;
+  font-family:'Orbitron',monospace;
+  font-weight:900;font-size:22px;
+  letter-spacing:4px;color:#fff;
+}
+.nav-logo .x{color:var(--red);text-shadow:0 0 20px var(--red);}
+.logo-icon{
+  width:32px;height:32px;position:relative;
+}
+.logo-icon svg{width:100%;height:100%;}
+.nav-links{display:flex;gap:32px;align-items:center;}
+.nav-links a{
+  font-family:'Orbitron',monospace;
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-dim);text-decoration:none;
+  transition:color .2s;position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-2px;left:0;right:0;height:1px;
+  background:var(--red);transform:scaleX(0);transition:transform .2s;
+}
+.nav-links a:hover{color:#fff;}
+.nav-links a:hover::after{transform:scaleX(1);}
+.nav-status{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:11px;color:var(--red);
+}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--blue-3);
-      color: #fff;
-      text-decoration: none;
-      padding: 16px 40px;
-      border-radius: 4px;
-      font-size: 14px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
-      box-shadow: var(--glow), inset 0 1px 0 rgba(255,255,255,.15);
-      transition: transform .2s, box-shadow .2s, background .2s;
-      position: relative; overflow: hidden;
-    }
-    .btn-primary::before {
-      content: '';
-      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
-      transition: left .5s;
-    }
-    .btn-primary:hover { transform: translateY(-2px); background: var(--blue-4); box-shadow: 0 0 60px rgba(30,140,255,.6), 0 0 120px rgba(30,140,255,.2); }
-    .btn-primary:hover::before { left: 100%; }
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:2;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:100px 24px 60px;
+  overflow:hidden;
+}
 
-    .btn-ghost {
-      display: inline-flex; align-items: center; gap: 10px;
-      border: 1px solid rgba(94,179,255,0.35);
-      color: var(--blue-1);
-      text-decoration: none;
-      padding: 16px 40px;
-      border-radius: 4px;
-      font-size: 14px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
-      transition: border-color .2s, color .2s, background .2s;
-    }
-    .btn-ghost:hover { border-color: var(--blue-2); color: #fff; background: rgba(30,140,255,0.1); }
+/* Hexagon bg decoration */
+.hex-bg{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:600px;height:600px;
+  opacity:.06;pointer-events:none;
+  animation:rotateSlow 30s linear infinite;
+}
+@keyframes rotateSlow{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
 
-    /* ─── VIDEO SECTION ─── */
-    .section {
-      position: relative; z-index: 1;
-      padding: 80px 24px 100px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .section-label {
-      font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
-      color: var(--blue-2); margin-bottom: 12px;
-    }
-    .section-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(36px, 5vw, 58px);
-      letter-spacing: 2px;
-      color: #fff;
-      margin-bottom: 48px;
-      line-height: 1;
-    }
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:12px;color:var(--red);
+  letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:28px;
+  animation:fadeIn .6s ease both;
+}
+.hero-eyebrow::before,.hero-eyebrow::after{
+  content:'';width:40px;height:1px;background:var(--red);opacity:.6;
+}
 
-    /* Video card */
-    .video-card {
-      background: rgba(5,20,45,0.7);
-      border: 1px solid rgba(94,179,255,0.15);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: transform .3s, border-color .3s, box-shadow .3s;
-      backdrop-filter: blur(12px);
-    }
-    .video-card:hover { transform: translateY(-6px); border-color: rgba(94,179,255,0.4); box-shadow: var(--glow); }
+.hero-title{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(60px,12vw,140px);
+  font-weight:900;line-height:.9;
+  letter-spacing:-2px;
+  animation:fadeIn .6s .15s ease both;
+  margin-bottom:8px;
+}
+.hero-title .line1{
+  display:block;
+  background:linear-gradient(135deg,#ffffff 0%,#ff6060 60%,var(--red) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-title .line2{
+  display:block;
+  font-size:.45em;
+  color:var(--red);
+  text-shadow:0 0 30px var(--red),0 0 60px rgba(255,26,26,.4);
+  letter-spacing:16px;
+  margin-top:4px;
+  -webkit-text-fill-color:var(--red);
+}
 
-    /* Featured big video */
-    .featured-video {
-      margin-bottom: 48px;
-    }
-    .video-embed {
-      position: relative; width: 100%; padding-top: 56.25%;
-    }
-    .video-embed iframe {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      border: none;
-    }
-    .video-info {
-      padding: 28px 32px 32px;
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
-      flex-wrap: wrap;
-    }
-    .video-meta h3 {
-      font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 8px; line-height: 1.3;
-    }
-    .video-meta p { font-size: 14px; color: rgba(179,217,255,0.55); line-height: 1.6; }
-    .video-tags { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-    .tag {
-      font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
-      padding: 4px 12px; border-radius: 100px;
-      background: rgba(30,140,255,0.15); border: 1px solid rgba(94,179,255,0.25);
-      color: var(--blue-2);
-    }
+.hero-version{
+  font-family:var(--mono);font-size:13px;color:var(--text-dim);
+  letter-spacing:2px;margin-bottom:32px;
+  animation:fadeIn .6s .28s ease both;
+}
+.hero-version span{color:var(--red);}
 
-    /* Download CTA inside card */
-    .card-download {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--blue-3);
-      color: #fff; text-decoration: none;
-      padding: 12px 28px; border-radius: 4px;
-      font-size: 13px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
-      white-space: nowrap;
-      box-shadow: var(--glow-sm);
-      transition: background .2s, transform .2s;
-      align-self: flex-end;
-    }
-    .card-download:hover { background: var(--blue-4); transform: translateY(-2px); }
+.hero-desc{
+  font-size:17px;font-weight:300;color:rgba(200,216,232,0.6);
+  max-width:560px;line-height:1.8;margin-bottom:52px;
+  animation:fadeIn .6s .4s ease both;
+}
 
-    /* Grid of extra video cards */
-    .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-    .mini-thumb {
-      position: relative; padding-top: 56.25%; overflow: hidden;
-    }
-    .mini-thumb img {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-      transition: transform .4s;
-    }
-    .video-card:hover .mini-thumb img { transform: scale(1.05); }
-    .play-overlay {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      background: rgba(0,20,50,0.35);
-      transition: background .3s;
-    }
-    .video-card:hover .play-overlay { background: rgba(0,20,50,0.15); }
-    .play-icon {
-      width: 52px; height: 52px; border-radius: 50%;
-      background: rgba(30,140,255,0.9);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: var(--glow-sm);
-      transition: transform .3s;
-    }
-    .video-card:hover .play-icon { transform: scale(1.1); }
-    .mini-info { padding: 20px 22px 22px; }
-    .mini-info h4 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px; line-height: 1.4; }
-    .mini-info span { font-size: 12px; color: rgba(179,217,255,0.5); }
+/* Terminal line */
+.terminal-line{
+  font-family:var(--mono);font-size:13px;color:var(--red);
+  background:rgba(255,26,26,0.06);
+  border:1px solid var(--border);
+  border-radius:2px;padding:10px 20px;
+  margin-bottom:44px;
+  animation:fadeIn .6s .5s ease both;
+  display:inline-block;
+}
+.terminal-line::before{content:'> ';}
 
-    /* ─── STATS STRIP ─── */
-    .stats {
-      position: relative; z-index: 1;
-      display: flex; justify-content: center; flex-wrap: wrap; gap: 1px;
-      border-top: 1px solid rgba(94,179,255,0.1);
-      border-bottom: 1px solid rgba(94,179,255,0.1);
-      background: rgba(5,14,33,0.6);
-      backdrop-filter: blur(10px);
-    }
-    .stat {
-      flex: 1 1 200px;
-      padding: 40px 32px;
-      text-align: center;
-      border-right: 1px solid rgba(94,179,255,0.08);
-    }
-    .stat:last-child { border-right: none; }
-    .stat-num {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 52px; letter-spacing: 2px;
-      color: var(--blue-2);
-      text-shadow: var(--glow-sm);
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .stat-label { font-size: 12px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: rgba(179,217,255,0.5); }
+.cta-row{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
+  animation:fadeIn .6s .55s ease both;
+}
 
-    /* ─── FOOTER ─── */
-    footer {
-      position: relative; z-index: 1;
-      text-align: center;
-      padding: 40px 24px;
-      border-top: 1px solid rgba(94,179,255,0.1);
-      color: rgba(179,217,255,0.3);
-      font-size: 13px;
-    }
-    footer a { color: var(--blue-2); text-decoration: none; }
+/* ── BUTTONS ── */
+.btn-xeno{
+  position:relative;
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--red);
+  color:#fff;text-decoration:none;
+  padding:15px 44px;
+  font-family:'Orbitron',monospace;
+  font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  clip-path:polygon(12px 0%,100% 0%,100% calc(100% - 12px),calc(100% - 12px) 100%,0% 100%,0% 12px);
+  transition:all .2s;
+  box-shadow:0 0 30px rgba(255,26,26,.5),inset 0 1px 0 rgba(255,255,255,.15);
+}
+.btn-xeno::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transform:translateX(-100%);transition:transform .5s;
+}
+.btn-xeno:hover{background:var(--red-dim);box-shadow:0 0 50px rgba(255,26,26,.8),0 0 100px rgba(255,26,26,.3);}
+.btn-xeno:hover::before{transform:translateX(100%);}
 
-    /* ─── ANIMATIONS ─── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+.btn-outline{
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid var(--border-bright);
+  color:var(--red);text-decoration:none;
+  padding:15px 44px;
+  font-family:'Orbitron',monospace;
+  font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  clip-path:polygon(12px 0%,100% 0%,100% calc(100% - 12px),calc(100% - 12px) 100%,0% 100%,0% 12px);
+  transition:all .2s;
+}
+.btn-outline:hover{background:rgba(255,26,26,.1);border-color:var(--red);color:#fff;}
 
-    /* ─── SCROLL REVEAL ─── */
-    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
+/* ── STATS ── */
+.stats-strip{
+  position:relative;z-index:2;
+  display:flex;justify-content:center;flex-wrap:wrap;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  background:rgba(4,6,8,0.8);
+  backdrop-filter:blur(10px);
+}
+.stat-item{
+  flex:1 1 180px;padding:36px 24px;text-align:center;
+  border-right:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.stat-item:last-child{border-right:none;}
+.stat-item::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+  transform:scaleX(0);transition:transform .4s;
+}
+.stat-item:hover::before{transform:scaleX(1);}
+.stat-num{
+  font-family:'Orbitron',monospace;font-size:40px;font-weight:900;
+  color:var(--red);text-shadow:0 0 20px var(--red-glow);
+  line-height:1;margin-bottom:8px;
+}
+.stat-lbl{font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);}
 
-    /* ─── RESPONSIVE ─── */
-    @media(max-width: 640px) {
-      nav { padding: 16px 20px; }
-      .nav-links { display: none; }
-      .video-info { flex-direction: column; }
-      .card-download { width: 100%; justify-content: center; }
-    }
-  </style>
+/* ── SECTIONS ── */
+.section{
+  position:relative;z-index:2;
+  max-width:1100px;margin:0 auto;padding:80px 24px;
+}
+.sec-header{margin-bottom:52px;}
+.sec-tag{
+  font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--red);margin-bottom:12px;display:block;
+}
+.sec-title{
+  font-family:'Orbitron',monospace;font-size:clamp(28px,4vw,48px);
+  font-weight:900;letter-spacing:1px;color:#fff;line-height:1.1;
+}
+.sec-title span{color:var(--red);text-shadow:0 0 20px var(--red-glow);}
+
+/* ── FEATURES ── */
+.features-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1px;
+  border:1px solid var(--border);
+  background:var(--border);
+}
+.feat-card{
+  background:var(--dark3);padding:36px 32px;
+  position:relative;overflow:hidden;
+  transition:background .3s;
+}
+.feat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+  transform:scaleX(0);transform-origin:left;transition:transform .4s;
+}
+.feat-card:hover{background:#0d1520;}
+.feat-card:hover::before{transform:scaleX(1);}
+.feat-icon{
+  width:48px;height:48px;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  background:var(--red-faint);
+  color:var(--red);
+}
+.feat-icon svg{width:24px;height:24px;}
+.feat-title{
+  font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+  letter-spacing:1.5px;color:#fff;margin-bottom:10px;
+}
+.feat-desc{font-size:14px;font-weight:300;color:var(--text-dim);line-height:1.7;}
+
+/* ── VIDEO SECTION ── */
+.video-wrap{
+  background:var(--dark3);
+  border:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.video-wrap::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+}
+.video-embed{position:relative;width:100%;padding-top:56.25%;}
+.video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
+.video-meta{
+  padding:28px 32px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  flex-wrap:wrap;
+  border-top:1px solid var(--border);
+}
+.video-meta-left h3{
+  font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:#fff;
+  margin-bottom:6px;letter-spacing:1px;
+}
+.video-meta-left p{font-size:13px;color:var(--text-dim);font-family:var(--mono);}
+.vid-tags{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.vid-tag{
+  font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 10px;border:1px solid var(--border);color:var(--red);
+  background:var(--red-faint);
+}
+
+/* ── DOWNLOAD SECTION ── */
+.dl-section{
+  position:relative;z-index:2;
+  padding:60px 24px 100px;
+  text-align:center;
+}
+.dl-card{
+  max-width:680px;margin:0 auto;
+  background:var(--dark3);
+  border:1px solid var(--border-bright);
+  position:relative;overflow:hidden;
+  padding:60px 48px;
+}
+.dl-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--red),transparent);
+}
+.dl-card::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 80% at 50% 50%,rgba(255,26,26,.04) 0%,transparent 70%);
+}
+.dl-icon{
+  width:80px;height:80px;margin:0 auto 28px;
+  border:2px solid var(--red);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--red);
+  box-shadow:0 0 30px rgba(255,26,26,.3);
+  animation:pulseBorder 2.5s ease infinite;
+}
+@keyframes pulseBorder{
+  0%,100%{box-shadow:0 0 30px rgba(255,26,26,.3);}
+  50%{box-shadow:0 0 50px rgba(255,26,26,.6),0 0 80px rgba(255,26,26,.2);}
+}
+.dl-card h2{
+  font-family:'Orbitron',monospace;font-size:32px;font-weight:900;
+  letter-spacing:2px;color:#fff;margin-bottom:12px;
+}
+.dl-card p{
+  font-size:15px;color:var(--text-dim);font-weight:300;
+  line-height:1.8;margin-bottom:36px;max-width:460px;margin-left:auto;margin-right:auto;
+}
+.dl-info{
+  display:flex;justify-content:center;gap:32px;margin-bottom:36px;
+  font-family:var(--mono);font-size:12px;color:var(--text-dim);
+  flex-wrap:wrap;
+}
+.dl-info span{display:flex;align-items:center;gap:6px;}
+.dl-info span b{color:var(--red);}
+
+/* ── TERMINAL BLOCK ── */
+.terminal{
+  background:#020406;border:1px solid var(--border);
+  font-family:var(--mono);font-size:13px;
+  padding:24px 28px;margin-bottom:48px;
+  text-align:left;position:relative;
+}
+.terminal-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:16px;
+  padding-bottom:12px;border-bottom:1px solid var(--border);
+}
+.t-dot{width:10px;height:10px;border-radius:50%;}
+.t-dot.red{background:#ff5f56;}
+.t-dot.yellow{background:#ffbd2e;}
+.t-dot.green{background:#27c93f;}
+.terminal-title{font-size:11px;color:var(--text-dim);letter-spacing:2px;flex:1;text-align:center;}
+.t-line{line-height:2.2;}
+.t-line .prompt{color:var(--red);}
+.t-line .cmd{color:#7ecfff;}
+.t-line .comment{color:#3d5266;}
+.t-line .ok{color:#27c93f;}
+.t-line .val{color:#ffd27e;}
+.cursor-blink{animation:cursorBlink .8s infinite;color:var(--red);}
+@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:2;
+  border-top:1px solid var(--border);
+  padding:36px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+  background:rgba(4,6,8,0.9);
+}
+.footer-logo{
+  font-family:'Orbitron',monospace;font-weight:900;
+  font-size:18px;letter-spacing:3px;
+  color:var(--red);text-shadow:0 0 15px var(--red);
+}
+.footer-copy{font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:1px;}
+.footer-links{display:flex;gap:24px;}
+.footer-links a{
+  font-family:var(--mono);font-size:11px;letter-spacing:1.5px;
+  color:var(--text-dim);text-decoration:none;transition:color .2s;
+}
+.footer-links a:hover{color:var(--red);}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+@media(max-width:640px){
+  nav{padding:0 20px;}
+  .nav-links{display:none;}
+  .hero-title{letter-spacing:-1px;}
+  .video-meta{flex-direction:column;}
+  .dl-card{padding:36px 24px;}
+  footer{flex-direction:column;text-align:center;}
+  .footer-links{justify-content:center;}
+}
+</style>
 </head>
 <body>
 
-<div class="bg-layer"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="noise"></div>
+<div class="bg"></div>
 <div class="bg-grid"></div>
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">STREAMVAULT</div>
+  <div class="nav-logo">
+    <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="16,2 30,10 30,22 16,30 2,22 2,10" stroke="#ff1a1a" stroke-width="1.5" fill="rgba(255,26,26,0.08)"/>
+      <text x="8" y="21" font-family="Orbitron" font-size="13" font-weight="900" fill="#ff1a1a">X</text>
+    </svg>
+    <span><span class="x">X</span>ENO</span>
+  </div>
   <div class="nav-links">
-    <a href="#videos">Videos</a>
-    <a href="#stats">Stats</a>
-    <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank">YouTube</a>
+    <a href="#features">Features</a>
+    <a href="#video">Preview</a>
+    <a href="#download">Download</a>
+  </div>
+  <div class="nav-status">
+    <div class="status-dot"></div>
+    UNDETECTED
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge"><span></span> Now Streaming</div>
-  <h1>Watch.<br>Download.<br>Enjoy.</h1>
-  <p class="hero-sub">Your premium destination for stunning video content. Preview directly in your browser and download in one click.</p>
-  <div class="btn-group">
-    <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank" class="btn-primary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-      Watch Now
+  <!-- Hexagon decoration -->
+  <svg class="hex-bg" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="300,30 540,165 540,435 300,570 60,435 60,165" stroke="#ff1a1a" stroke-width="1"/>
+    <polygon points="300,80 490,185 490,415 300,520 110,415 110,185" stroke="#ff1a1a" stroke-width="0.6"/>
+    <polygon points="300,130 440,205 440,395 300,470 160,395 160,205" stroke="#ff1a1a" stroke-width="0.4"/>
+    <line x1="300" y1="30" x2="300" y2="570" stroke="#ff1a1a" stroke-width="0.3"/>
+    <line x1="60" y1="165" x2="540" y2="435" stroke="#ff1a1a" stroke-width="0.3"/>
+    <line x1="540" y1="165" x2="60" y2="435" stroke="#ff1a1a" stroke-width="0.3"/>
+  </svg>
+
+  <div class="hero-eyebrow">XENO EXECUTOR v3.0</div>
+
+  <h1 class="hero-title">
+    <span class="line1">XENO</span>
+    <span class="line2">EXECUTOR</span>
+  </h1>
+
+  <div class="hero-version">VERSION <span>3.0.1</span> &nbsp;·&nbsp; BUILD <span>2025.04</span> &nbsp;·&nbsp; STATUS <span>UNDETECTED</span></div>
+
+  <p class="hero-desc">
+    The most powerful, undetected script executor engineered for peak performance. Bypass any detection system with military-grade obfuscation technology.
+  </p>
+
+  <div class="terminal-line">Initializing Xeno.Core... bypasses loaded... ready.</div>
+
+  <div class="cta-row">
+    <a href="https://gofile.io/d/B0sJ77" target="_blank" class="btn-xeno">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download Xeno
     </a>
-    <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank" class="btn-ghost">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download
+    <a href="#video" class="btn-outline">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      Watch Preview
     </a>
   </div>
 </section>
 
 <!-- STATS -->
-<div class="stats" id="stats">
-  <div class="stat reveal">
-    <div class="stat-num">4K</div>
-    <div class="stat-label">Ultra HD Quality</div>
+<div class="stats-strip">
+  <div class="stat-item reveal">
+    <div class="stat-num">500K+</div>
+    <div class="stat-lbl">Active Users</div>
   </div>
-  <div class="stat reveal">
-    <div class="stat-num">2M+</div>
-    <div class="stat-label">Downloads</div>
+  <div class="stat-item reveal">
+    <div class="stat-num">99.8%</div>
+    <div class="stat-lbl">Uptime</div>
   </div>
-  <div class="stat reveal">
-    <div class="stat-num">99%</div>
-    <div class="stat-label">Satisfaction</div>
+  <div class="stat-item reveal">
+    <div class="stat-num">0</div>
+    <div class="stat-lbl">Detections</div>
   </div>
-  <div class="stat reveal">
+  <div class="stat-item reveal">
+    <div class="stat-num">3.0</div>
+    <div class="stat-lbl">Version</div>
+  </div>
+  <div class="stat-item reveal">
     <div class="stat-num">24/7</div>
-    <div class="stat-label">Availability</div>
+    <div class="stat-lbl">Support</div>
   </div>
 </div>
 
-<!-- VIDEO SECTION -->
-<section class="section" id="videos">
-  <div class="section-label">Featured Content</div>
-  <h2 class="section-title">Preview & Download</h2>
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="sec-header reveal">
+    <span class="sec-tag">// Core Systems</span>
+    <h2 class="sec-title">BUILT FOR <span>POWER</span></h2>
+  </div>
+  <div class="features-grid">
 
-  <!-- FEATURED VIDEO -->
-  <div class="video-card featured-video reveal">
+    <div class="feat-card reveal">
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="feat-title">BYPASS ENGINE</div>
+      <div class="feat-desc">Military-grade obfuscation layer renders Xeno completely invisible to all detection systems. Stay undetected indefinitely.</div>
+    </div>
+
+    <div class="feat-card reveal">
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <div class="feat-title">INSTANT INJECT</div>
+      <div class="feat-desc">Lightning-fast DLL injection with sub-50ms latency. No waiting. No lag. Execute scripts the moment you need them.</div>
+    </div>
+
+    <div class="feat-card reveal">
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+      </div>
+      <div class="feat-title">FULL LUA API</div>
+      <div class="feat-desc">Complete Lua 5.4 support with all custom globals, drawing library, and unrestricted API access for unlimited scripting.</div>
+    </div>
+
+    <div class="feat-card reveal">
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+      </div>
+      <div class="feat-title">AUTO-UPDATE</div>
+      <div class="feat-desc">Silent background updates keep Xeno in sync with every patch. Never manually update again — always stay ahead.</div>
+    </div>
+
+    <div class="feat-card reveal">
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      </div>
+      <div class="feat-title">CLEAN UI</div>
+      <div class="feat-desc">Precision-engineered dark interface with integrated script hub, console output, and real-time execution feedback.</div>
+    </div>
+
+    <div class="feat-card reveal">
+      <div class="feat-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <div class="feat-title">COMMUNITY HUB</div>
+      <div class="feat-desc">Access thousands of verified scripts from our community vault. Share, rate, and discover the best scripts instantly.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- VIDEO -->
+<section class="section" id="video">
+  <div class="sec-header reveal">
+    <span class="sec-tag">// Showcase</span>
+    <h2 class="sec-title">SEE IT IN <span>ACTION</span></h2>
+  </div>
+  <div class="video-wrap reveal">
     <div class="video-embed">
       <iframe
         src="https://www.youtube.com/embed/FAJFbGj3Y08?rel=0&modestbranding=1&color=white"
-        title="Featured Video"
+        title="Xeno Executor Preview"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen>
       </iframe>
     </div>
-    <div class="video-info">
-      <div class="video-meta">
-        <h3>Featured Video — Full Preview</h3>
-        <p>Watch the full video directly in your browser. High-quality streaming with no interruptions. Click download to save it to your device.</p>
-        <div class="video-tags">
-          <span class="tag">4K Ready</span>
-          <span class="tag">HD</span>
-          <span class="tag">YouTube</span>
+    <div class="video-meta">
+      <div class="video-meta-left">
+        <h3>XENO EXECUTOR — OFFICIAL SHOWCASE</h3>
+        <p>// Full demonstration of bypass engine, script execution &amp; UI</p>
+        <div class="vid-tags">
+          <span class="vid-tag">Undetected</span>
+          <span class="vid-tag">v3.0</span>
+          <span class="vid-tag">2025</span>
+          <span class="vid-tag">Official</span>
         </div>
       </div>
-      <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank" class="card-download">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download / Open
+      <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank" class="btn-xeno" style="white-space:nowrap;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Full Video
       </a>
     </div>
   </div>
-
-  <!-- MORE VIDEOS GRID -->
-  <div class="video-grid">
-
-    <!-- Card 1 -->
-    <div class="video-card reveal">
-      <div class="mini-thumb">
-        <img src="https://img.youtube.com/vi/FAJFbGj3Y08/mqdefault.jpg" alt="Video thumbnail" loading="lazy"/>
-        <div class="play-overlay">
-          <div class="play-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-      </div>
-      <div class="mini-info">
-        <h4>Episode 01 — Introduction</h4>
-        <span>YouTube · HD · 2025</span>
-      </div>
-    </div>
-
-    <!-- Card 2 -->
-    <div class="video-card reveal">
-      <div class="mini-thumb">
-        <img src="https://img.youtube.com/vi/FAJFbGj3Y08/hqdefault.jpg" alt="Video thumbnail" loading="lazy"/>
-        <div class="play-overlay">
-          <div class="play-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-      </div>
-      <div class="mini-info">
-        <h4>Episode 02 — Deep Dive</h4>
-        <span>YouTube · 4K · 2025</span>
-      </div>
-    </div>
-
-    <!-- Card 3 -->
-    <div class="video-card reveal">
-      <div class="mini-thumb">
-        <img src="https://img.youtube.com/vi/FAJFbGj3Y08/sddefault.jpg" alt="Video thumbnail" loading="lazy"/>
-        <div class="play-overlay">
-          <div class="play-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-      </div>
-      <div class="mini-info">
-        <h4>Episode 03 — Final Cut</h4>
-        <span>YouTube · HD · 2025</span>
-      </div>
-    </div>
-
-  </div>
 </section>
 
-<!-- BIG DOWNLOAD CTA -->
-<section style="position:relative;z-index:1;padding:60px 24px 100px;text-align:center;">
-  <div style="max-width:620px;margin:0 auto;background:rgba(5,20,45,0.65);border:1px solid rgba(94,179,255,0.2);border-radius:16px;padding:56px 40px;backdrop-filter:blur(14px);" class="reveal">
-    <div style="font-size:48px;margin-bottom:20px;">⬇️</div>
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;color:#fff;margin-bottom:14px;">Ready to Download?</h2>
-    <p style="color:rgba(179,217,255,0.6);font-size:15px;line-height:1.7;margin-bottom:36px;">Click the button below to open the video on YouTube, where you can watch, share, and save it to your library.</p>
-    <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank" class="btn-primary" style="font-size:15px;padding:18px 52px;">
+<!-- DOWNLOAD -->
+<div class="dl-section" id="download">
+  <div class="dl-card reveal">
+    <div class="dl-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    </div>
+    <h2>GET XENO v3.0</h2>
+    <p>Download the most powerful undetected executor available. Free forever. No key system. No BS.</p>
+
+    <div class="dl-info">
+      <span><b>OS:</b> Windows 10/11</span>
+      <span><b>SIZE:</b> 4.2 MB</span>
+      <span><b>VERSION:</b> 3.0.1</span>
+      <span><b>STATUS:</b> Undetected ✓</span>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal reveal">
+      <div class="terminal-header">
+        <div class="t-dot red"></div>
+        <div class="t-dot yellow"></div>
+        <div class="t-dot green"></div>
+        <div class="terminal-title">XENO // TERMINAL</div>
+      </div>
+      <div class="t-line"><span class="prompt">xeno@core:~$ </span><span class="cmd">./xeno --version</span></div>
+      <div class="t-line"><span class="ok">  Xeno Executor v3.0.1 — Build 2025.04.03</span></div>
+      <div class="t-line"><span class="prompt">xeno@core:~$ </span><span class="cmd">./xeno --status</span></div>
+      <div class="t-line"><span class="ok">  [✓] Bypass Engine: ACTIVE</span></div>
+      <div class="t-line"><span class="ok">  [✓] Lua VM: LOADED</span></div>
+      <div class="t-line"><span class="ok">  [✓] Detection: 0 FLAGS</span></div>
+      <div class="t-line"><span class="prompt">xeno@core:~$ </span><span class="cmd">./xeno --inject</span></div>
+      <div class="t-line"><span class="val">  Injecting... </span><span class="ok">SUCCESS</span> <span class="comment">// 34ms</span></div>
+      <div class="t-line"><span class="prompt">xeno@core:~$ </span><span class="cursor-blink">█</span></div>
+    </div>
+
+    <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank" class="btn-xeno" style="font-size:13px;padding:18px 56px;">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download & Watch on YouTube
+      DOWNLOAD FREE
     </a>
   </div>
-</section>
+</div>
 
+<!-- FOOTER -->
 <footer>
-  Built with 💙 &nbsp;|&nbsp; <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank">View on YouTube</a>
+  <div class="footer-logo">XENO</div>
+  <div class="footer-copy">© 2025 XENO EXECUTOR &nbsp;·&nbsp; ALL RIGHTS RESERVED</div>
+  <div class="footer-links">
+    <a href="https://www.youtube.com/watch?v=FAJFbGj3Y08" target="_blank">YouTube</a>
+    <a href="#">Discord</a>
+    <a href="#">Scripts</a>
+  </div>
 </footer>
 
 <script>
-  // Scroll reveal
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((e, i) => {
-      if (e.isIntersecting) {
-        setTimeout(() => e.target.classList.add('visible'), i * 80);
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.12 });
-  reveals.forEach(el => observer.observe(el));
-</script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX; my=e.clientY;
+  cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+});
+function animRing(){
+  rx+=(mx-rx)*.15; ry+=(my-ry)*.15;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.transform='translate(-50%,-50%) scale(1.6)';ring.style.borderColor='rgba(255,26,26,0.8)';});
+  el.addEventListener('mouseleave',()=>{ring.style.transform='translate(-50%,-50%) scale(1)';ring.style.borderColor='rgba(255,26,26,0.5)';});
+});
 
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('visible'),i*80);
+      obs.unobserve(e.target);
+    }
+  });
+},{threshold:.1});
+reveals.forEach(el=>obs.observe(el));
+</script>
 </body>
 </html>
